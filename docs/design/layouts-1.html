@@ -233,6 +233,81 @@ h1 { font: 600 34px/1.1 var(--serif); margin: 0 0 8px; }
   </section>
 
   <section class="direction">
+    <h2><span class="letter">+</span> Moving things around, a quick tidy, and a list to pick from</h2>
+    <p class="why"><b>Moving:</b> hold a stop and drag it up or down; swipe it right for Done, left for Later (later today, another day, or next time). <b>Tidy:</b> one button that puts the day back in walking order from where you are, and, when the day is fuller than your pace, offers what to push, showing the day before and after so you accept it in one tap or leave it. <b>To pick from:</b> everything saved for the trip but not on a day, grouped by area, the ones near today's walk first; tap + to put one on today, or hold it to choose a day. Drawn in A, the same in B and C. On the Mac it is the middle column's second tab, and stops drag from it onto a day in the sidebar.</p>
+    <div class="row">
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div class="map" id="mapP1"></div>
+        <div class="sheet" style="top:150px;bottom:74px">
+          <div class="grab"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center"><span class="serif" style="font-size:20px;font-weight:600">Monday 23</span><span class="btn line" style="padding:5px 12px">Tidy</span></div>
+          <div class="stop"><span class="num" style="background:#1f4fb4">1</span><div><div class="name">Berlin Wall Memorial</div><div class="sub">Outdoor grounds, about 1h</div></div><span class="time">≡</span></div>
+          <div class="leg">S-Bahn 18 min</div>
+          <div class="stop" style="background:var(--ground);margin:0 -16px;padding:8px 16px;box-shadow:0 6px 18px rgba(0,0,0,.18);transform:rotate(-1deg)"><span class="num" style="background:#b07a12">2</span><div><div class="name">Gropius Bau</div><div class="sub">held, moving</div></div><span class="time">≡</span></div>
+          <div style="height:3px;background:var(--accent);border-radius:2px;margin:6px 0"></div>
+          <div class="stop"><span class="num" style="background:#b07a12">3</span><div><div class="name">Topographie des Terrors</div><div class="sub">Drop if too full</div></div><span class="time">≡</span></div>
+          <div class="stop" style="margin:4px -16px 0;padding:8px 16px;background:#e3eee6;position:relative"><span class="num" style="background:#0f7c86">4</span><div><div class="name">Gazzo</div><div class="sub" style="color:var(--ok);font-weight:600">← Later: tonight, Tue, next time</div></div><span class="time"></span></div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">Hold and drag to reorder; swipe a stop for Done or Later. The map redraws the walk as you go.</div></div>
+
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div class="map" id="mapP2"></div>
+        <div class="sheet" style="top:170px;bottom:74px">
+          <div class="grab"></div>
+          <div class="serif" style="font-size:20px;font-weight:600">Tidy Monday</div>
+          <div class="muted" style="font-size:12px;margin-bottom:8px">In walking order from the Wall, and back to your pace of 4 per half day.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+            <div><div style="font-weight:700;margin-bottom:4px">Now</div>Wall<br>Gropius Bau<br>Topographie<br><span style="color:var(--accent)">Gazzo, far</span><br>Berlinische Galerie<br>C/O Berlin<br>Vegang<div class="muted" style="margin-top:4px">7 stops · 1h50 travel</div></div>
+            <div><div style="font-weight:700;margin-bottom:4px">Tidied</div>Wall<br>Gropius Bau<br>Berlinische Galerie<br><span style="color:var(--ok)">Lunch nearby</span><br>Vegang<br><span class="muted" style="text-decoration:line-through">Topographie</span> → later<br><span class="muted" style="text-decoration:line-through">C/O</span> → next time<div class="muted" style="margin-top:4px">5 stops · 55 min travel</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><span class="btn accent">Tidy it</span><span class="btn line">Leave it</span></div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">Tidy shows the day before and after; one tap to accept, nothing changes unless you do.</div></div>
+
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div style="position:absolute;top:40px;left:0;right:0;bottom:74px;padding:0 14px;overflow:hidden">
+          <div class="serif" style="font-size:22px;font-weight:600">To pick from</div>
+          <div class="muted" style="font-size:12px">Saved for Berlin, not on a day yet</div>
+          <div style="display:flex;gap:6px;margin:10px 0 4px;overflow:hidden"><span class="chip on">Near today's walk</span><span class="chip">Museums</span><span class="chip">Food</span><span class="chip">Inbox 2</span></div>
+          <div style="margin-top:10px;font-weight:700;font-size:12px;display:flex;gap:6px;align-items:center"><span class="num" style="background:#b07a12;width:9px;height:9px"></span>Kreuzberg <span class="muted" style="font-weight:500">on today's walk</span></div>
+          <div class="stop"><span></span><div><div class="name">Checkpoint Charlie</div><div class="sub">4 min from Gropius Bau</div></div><span class="btn line" style="padding:3px 10px">+</span></div>
+          <div class="stop"><span></span><div><div class="name">Vegup</div><div class="sub">Lunch, vegan · 6 min from Berlinische</div></div><span class="btn line" style="padding:3px 10px">+</span></div>
+          <div class="stop"><span></span><div><div class="name">Lia's Kitchen</div><div class="sub">Vegan burgers</div></div><span class="btn line" style="padding:3px 10px">+</span></div>
+          <div style="margin-top:8px;font-weight:700;font-size:12px;display:flex;gap:6px;align-items:center"><span class="num" style="background:#1f4fb4;width:9px;height:9px"></span>Mitte</div>
+          <div class="stop"><span></span><div><div class="name">Gendarmenmarkt Christmas market</div><div class="sub">Opens today</div></div><span class="btn line" style="padding:3px 10px">+</span></div>
+          <div class="stop"><span></span><div><div class="name">Museum Island and Berliner Dom</div><div class="sub">Outside only on Monday</div></div><span class="btn line" style="padding:3px 10px">+</span></div>
+          <div style="margin-top:8px;font-weight:700;font-size:12px;display:flex;gap:6px;align-items:center"><span class="num" style="background:#2f6b4f;width:9px;height:9px"></span>Tiergarten</div>
+          <div class="stop"><span></span><div><div class="name">Gemäldegalerie</div><div class="sub">Closed Monday</div></div><span class="btn line" style="padding:3px 10px;opacity:.4">+</span></div>
+        </div>
+        <div class="tabbar">
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">The Places tab: what you saved and have not used, nearest to today's walk first. + puts it on today; hold to choose a day.</div></div>
+    </div>
+  </section>
+
+  <section class="direction">
     <h2><span class="letter">M</span> On the Mac: three columns <span class="rec">Recommended</span></h2>
     <p class="why"><b>A sidebar with the trip's days, its areas, the Inbox and the arrival guide; the chosen day or area as a list in the middle; the map on the right, as large as the window allows.</b> Planning is moving things between days and seeing them on the map, so both stay on screen at once; a stop clicked in the list or on the map opens as a card floating over the map. On the iPad the same layout, the sidebar folding away in portrait.</p>
     <div class="mac"><div class="win">
@@ -305,6 +380,8 @@ const views = {
   mapB1: { bounds: [[13.30, 52.485], [13.44, 52.545]], padding: 12 },
   mapC1: { bounds: [[13.36, 52.495], [13.42, 52.52]], padding: { top: 60, bottom: 230, left: 10, right: 10 } },
   mapM: { center: [13.335, 52.515], zoom: 12.6 },
+  mapP1: { bounds: [[13.30, 52.485], [13.44, 52.545]], padding: { top: 30, bottom: 520, left: 20, right: 20 } },
+  mapP2: { bounds: [[13.30, 52.485], [13.44, 52.545]], padding: { top: 30, bottom: 500, left: 20, right: 20 } },
 };
 fetch('https://tiles.openfreemap.org/styles/positron').then((r) => r.json()).then((style) => {
   for (const [id, v] of Object.entries(views)) {
