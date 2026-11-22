@@ -1,0 +1,18 @@
+import { createRoot } from 'react-dom/client';
+import { registerSW } from 'virtual:pwa-register';
+import '@fontsource-variable/hanken-grotesk';
+import '@fontsource-variable/newsreader';
+import '@fontsource-variable/archivo';
+import '@fontsource-variable/instrument-sans';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import './app.css';
+import { App } from './App';
+import { applyLook, savedLook } from './looks';
+import { whenChanged } from './db';
+import { startSync, syncSoon } from './sync';
+
+applyLook(savedLook());
+registerSW({ immediate: true });
+whenChanged(syncSoon);
+startSync();
+createRoot(document.getElementById('root')!).render(<App />);
