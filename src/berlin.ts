@@ -1,4 +1,4 @@
-import { db, getMeta, setMeta } from './db';
+import { db, getMeta, setMeta, save } from './db';
 import type { Trip, Area, Place, Day, Stop, Anchor, CityGuide, PlaceKind, StopState } from './model';
 
 // The Berlin trip of 21 to 24 Nov 2026, from Yvan's Notion page, as the test trip for every round.
@@ -7,7 +7,7 @@ const id = (n: number) => `0b3e1100-0000-4000-8000-${String(n).padStart(12, '0')
 export const BERLIN_ID = id(1);
 // Raised whenever the trip below changes, so a phone that already holds Berlin takes the new version.
 // 2: the trip as it went (Yvan, 22 Nov 2026): Sat and Sun done, Mon re-planned.
-export const BERLIN_VERSION = 2;
+export const BERLIN_VERSION = 2; // never raise it during the trip: it reloads the days as planned
 
 const areas: [number, string, string][] = [
   [10, 'Charlottenburg', '#d9411e'],
@@ -86,11 +86,7 @@ export async function loadBerlin() {
     { ...base, id: id(401), tripId: BERLIN_ID, kind: 'stay', title: 'The Hoxton, Charlottenburg', start: '2026-11-21T14:00', end: '2026-11-24T11:00', placeId: id(100), detail: 'Leave the bag at reception on Tuesday.' },
     { ...base, id: id(404), tripId: BERLIN_ID, kind: 'flight', title: 'Flight home', start: '2026-11-24T12:00', placeId: id(101), detail: 'Leave the hotel at 09:30 for BER with an ABC ticket.' },
   ];
-  const G: CityGuide = { ...base, id: id(500), tripId: BERLIN_ID, city: 'Berlin', sections: [
-    { title: 'Airport to hotel', lines: ['RE8 or RB23 from BER straight to Zoologischer Garten, about 35 min, no change, then 8 min walk.', 'The S9 is direct but slower. Taxi or Uber about 45 min.'] },
-    { title: 'Tickets', lines: ['No tap-to-pay and no gates. Buy in the BVG Ticket app (Apple Pay works) or at machines.', 'Inspectors check on board, the fine is €60. A paper ticket must be stamped before boarding.', 'The city is zone AB; the airport is zone C, so airport trips need ABC.', 'Best for this trip: Berlin WelcomeCard 72h ABC, €45.50, bought at the airport.'] },
-    { title: 'Apps', lines: ['BVG Fahrinfo or Google Maps for routes.', 'U-Bahn and S-Bahn run all night on weekends.'] },
-  ] };
+  const G: CityGuide = { ...base, ...berlinGuide() };
   await db.transaction('rw', [db.trips, db.areas, db.places, db.days, db.stops, db.anchors, db.guides], async () => {
     await db.trips.put(trip); await db.areas.bulkPut(A); await db.places.bulkPut(P);
     await db.days.bulkPut(D); await db.stops.bulkPut(S); await db.anchors.bulkPut(N); await db.guides.put(G);
@@ -100,7 +96,7 @@ export async function loadBerlin() {
       for (const r of await (t as any).where('tripId').equals(BERLIN_ID).toArray())
         if (!keep.has(r.id) && !r.deleted) await (t as any).put({ ...r, deleted: 1, updatedAt: now, dirty: 1 });
   });
-  await setMeta('berlinVersion', BERLIN_VERSION);
+  await setMeta('berlinVersion', BERLIN_VERSION); await setMeta('berlinGuide', GUIDE_VERSION);
   return trip;
 }
 export const BERLIN = { areas, places, days, stops };
@@ -109,4 +105,38 @@ export const BERLIN = { areas, places, days, stops };
 export async function refreshBerlin() {
   const t = await db.trips.get(BERLIN_ID);
   if (t && !t.deleted && ((await getMeta<number>('berlinVersion')) || 1) < BERLIN_VERSION) await loadBerlin();
+  // The arrival guide alone, without touching the days as they went: raising BERLIN_VERSION would reload the whole trip.
+  if (t && !t.deleted && ((await getMeta<number>('berlinGuide')) || 1) < GUIDE_VERSION) {
+    await save<CityGuide>('guides', berlinGuide());
+    await setMeta('berlinGuide', GUIDE_VERSION);
+  }
+}
+
+// Berlin's arrival guide, from his Notion page BERLIN NOV 2026 (Getting around), plus how the network works.
+export const GUIDE_VERSION = 2;
+export function berlinGuide(): Omit<CityGuide, 'updatedAt' | 'dirty' | 'deleted'> {
+  return { id: id(500), tripId: BERLIN_ID, city: 'Berlin', sections: [
+    { title: 'Airport to the hotel', lines: [
+      'RE8 or RB23 from BER straight to Zoologischer Garten: about 35 min, no change. Then 8 min on foot to Meinekestraße.',
+      'The S9 also goes direct but is slower. Taxi or Uber: about 45 min.',
+      'You need an ABC ticket: the airport is in zone C.'] },
+    { title: 'Which ticket', lines: [
+      'Berlin WelcomeCard 72h ABC, €45.50, bought at the airport. It starts when validated and still covers the ride back on Tuesday morning.',
+      'It includes discounts at about 170 places.',
+      'Single tickets come to about the same: ABC €5, AB €4, each good for 2 hours in one direction.'] },
+    { title: 'How to pay', lines: [
+      'You cannot tap a bank card to ride: that is planned for 2029.',
+      'Buy in the BVG Ticket app (Apple Pay works), or at the machines on platforms and in trams.'] },
+    { title: 'Checks and fines', lines: [
+      'There are no gates. Inspectors check on board, in plain clothes, and the fine is €60.',
+      'A paper ticket must be stamped in the small box before you board. An app ticket needs nothing.'] },
+    { title: 'Getting around', lines: [
+      'The city is zones AB. U-Bahn (underground, U) and S-Bahn (overground, S) are the quick way; trams cover the east, buses the rest.',
+      'Bus 100 and 200 pass most of the sights between Zoologischer Garten and Alexanderplatz: a cheap tour.',
+      'U-Bahn and S-Bahn run all night on Friday and Saturday; on other nights, night buses (N) take over.'] },
+    { title: 'Useful apps', lines: [
+      'BVG Ticket for tickets, BVG Fahrinfo or Google Maps for routes.'] },
+    { title: 'Back to the airport', lines: [
+      'Tuesday: leave the hotel at 09:30, the same RE8 or RB23 from Zoologischer Garten, for the 12:00 flight.'] },
+  ] };
 }

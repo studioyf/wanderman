@@ -84,3 +84,7 @@ export const googleSearchNear = (q: string, p: { lat?: number; lng?: number }) =
 export const mapsLink = (p: { name: string; lat?: number; lng?: number; address?: string }) => apple
   ? `https://maps.apple.com/?q=${encodeURIComponent(p.name)}&ll=${p.lat},${p.lng}`
   : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([p.name, p.address].filter(Boolean).join(', '))}`;
+// From one place to another by public transport, in the phone's own maps.
+export const transitLink = (a: { lat?: number; lng?: number }, b: { lat?: number; lng?: number }) => apple
+  ? `https://maps.apple.com/?saddr=${a.lat},${a.lng}&daddr=${b.lat},${b.lng}&dirflg=r`
+  : `https://www.google.com/maps/dir/?api=1&origin=${a.lat},${a.lng}&destination=${b.lat},${b.lng}&travelmode=transit`;

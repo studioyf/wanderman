@@ -2,12 +2,17 @@ import { remove } from '../db';
 import { go } from '../App';
 import { dayLabel, datesLabel } from './format';
 import { AnchorList } from './Anchors';
+import { transitLink } from '../actions';
 import { dayStops } from '../plan';
 import type { TripData } from './useTrip';
 
 // The trip as a whole: its fixed times, its days at a glance, the arrival guide.
 export function TripInfo({ t, part, onDay }: { t: TripData; part?: 'anchors' | 'arrival' | 'all'; onDay: (id: string) => void }) {
   const trip = t.trip!;
+  const base = trip.baseId ? t.byId.get(trip.baseId) : undefined;
+  // The airport the trip flies into: the place of its first flight.
+  const firstFlight = [...t.anchors].filter((a) => a.kind === 'flight' && a.placeId).sort((a, b) => a.start.localeCompare(b.start))[0];
+  const airport = firstFlight ? t.byId.get(firstFlight.placeId!) : undefined;
   const show = (p: string) => !part || part === 'all' || part === p;
   return (
     <div className="info">
@@ -24,7 +29,17 @@ export function TripInfo({ t, part, onDay }: { t: TripData; part?: 'anchors' | '
       </>)}
       {show('arrival') && (<>
         <h4>Arrival guide</h4>
-        {t.guide ? t.guide.sections.map((s) => <div key={s.title}><b>{s.title}</b>{s.lines.map((l, i) => <p key={i}>{l}</p>)}</div>) : <p className="muted">No arrival guide for {trip.city} yet.</p>}
+        {t.guide ? (
+          <div className="guide" data-guide>
+            {airport && base && <a className="secondary guide-go" data-guide-route href={transitLink(airport, base)} target="_blank" rel="noreferrer">{airport.name} to {base.name}, in Maps</a>}
+            {t.guide.sections.map((s) => (
+              <section key={s.title} className="guide-part">
+                <h5>{s.title}</h5>
+                {s.lines.map((l, i) => <p key={i}>{l}</p>)}
+              </section>
+            ))}
+          </div>
+        ) : <p className="muted">No arrival guide for {trip.city} yet.</p>}
       </>)}
       {(!part || part === 'all') && (
         <div className="row" style={{ marginTop: '1.5rem' }}>

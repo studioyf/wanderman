@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect } from 'vitest';
-import { db } from './db';
-import { loadBerlin, BERLIN_ID } from './berlin';
+import { db, setMeta } from './db';
+import { loadBerlin, refreshBerlin, BERLIN_ID } from './berlin';
 
 describe('the Berlin test trip', () => {
   it('loads whole, every stop pointing at a real place and day', async () => {
@@ -33,5 +33,16 @@ describe('the Berlin test trip', () => {
   it('loads twice without making a second trip', async () => {
     await loadBerlin();
     expect(await db.trips.count()).toBe(1);
+  });
+  it('takes a new arrival guide without touching the days as they went', async () => {
+    await loadBerlin();
+    const s = (await db.stops.where('tripId').equals(BERLIN_ID).filter((x) => x.state === 'planned').first())!;
+    await db.stops.put({ ...s, state: 'done' });
+    await db.guides.put({ ...(await db.guides.toArray())[0], sections: [{ title: 'old', lines: [] }] });
+    await setMeta('berlinGuide', 1);
+    await refreshBerlin();
+    expect((await db.stops.get(s.id))!.state).toBe('done');
+    const g = (await db.guides.toArray())[0];
+    expect(g.sections.map((x) => x.title)).toEqual(['Airport to the hotel', 'Which ticket', 'How to pay', 'Checks and fines', 'Getting around', 'Useful apps', 'Back to the airport']);
   });
 });

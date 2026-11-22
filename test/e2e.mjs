@@ -217,6 +217,16 @@ try {
   ok('a photo note is kept on the device', (await p.locator('.note-photo-img').count()) === 1);
   await shot('11-notes');
 
+  // The arrival guide, in the Trip tab: every part, and the route from the airport to the hotel in Maps.
+  await p.click('[data-tab="trip"]');
+  await p.waitForSelector('[data-guide]');
+  const guide = (await p.textContent('[data-guide]')) || '';
+  const parts = ['Airport to the hotel', 'Which ticket', 'How to pay', 'Checks and fines', 'Getting around', 'Useful apps', 'Back to the airport'];
+  ok('the Trip tab has the arrival guide, every part', parts.every((x) => guide.includes(x)) && /€60/.test(guide) && /WelcomeCard/.test(guide), parts.filter((x) => !guide.includes(x)).join(', '));
+  ok('the guide links the airport to the hotel by public transport', /travelmode=transit|dirflg=r/.test((await p.getAttribute('[data-guide-route]', 'href')) || ''));
+  await p.locator('[data-guide]').scrollIntoViewIfNeeded();
+  await shot('13-guide');
+
   // Fixed times: Tuesday shows the check-out and the flight home; a ticket PDF attaches and opens.
   await openDay('Tue 24 Nov'); await p.click('[data-tab="today"]');
   const anchorsText = (await p.textContent('[data-day-anchors]').catch(() => '')) || '';
