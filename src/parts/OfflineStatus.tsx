@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Place, Trip } from '../model';
 import { needsSaving, saveOffline } from '../offline';
+import { fillDetails } from '../details';
 import { baseStyle } from '../mapstyle';
 import { mb } from './format';
 import { useOnline } from './SyncBadge';
@@ -11,6 +12,8 @@ export function OfflineStatus({ trip, places }: { trip: Trip; places: Place[] })
   const online = useOnline();
   const [progress, setProgress] = useState<[number, number]>(), [error, setError] = useState('');
   const run = () => { setError(''); saveOffline(trip.id, (d, t) => setProgress([d, t])).catch((e) => setError(String(e?.message || e))).finally(() => setProgress(undefined)); };
+  // With the map, each place's photo, hours and two lines from Wikipedia, so the cards read offline too.
+  useEffect(() => { if (online) fillDetails(trip.id).catch(() => {}); }, [online, trip.id, places.length]);
   useEffect(() => {
     if (!online || progress) return;
     baseStyle().then((b) => { if (needsSaving(trip, places, b.template)) run(); }).catch(() => {});

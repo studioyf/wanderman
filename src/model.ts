@@ -18,6 +18,8 @@ export type Place = Row & {
   tripId: string; areaId?: string; name: string; kind: PlaceKind;
   lat?: number; lng?: number; // a link with no location sits in the Inbox until it gets one
   address?: string; url?: string; note?: string; hours?: string;
+  // Filled once from OpenStreetMap and Wikipedia when there is signal, then kept for the road (src/details.ts).
+  photo?: string; blurb?: string; wiki?: string; fee?: 'yes' | 'no'; detailsAt?: number;
 };
 export type Day = Row & { tripId: string; date: string; title: string; note?: string };
 export type StopState = 'planned' | 'done' | 'later' | 'dropped';

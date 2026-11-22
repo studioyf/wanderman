@@ -91,12 +91,18 @@ try {
   // Swipe the first stop right: done.
   const first = p.locator('.stops .stop-main').first();
   await first.scrollIntoViewIfNeeded();
-  const fb = await first.boundingBox();
+  // Wait for the row to sit still: after Tidy the list and the sheet can still be settling.
+  let fb = await first.boundingBox();
+  for (let i = 0; i < 20; i++) { await p.waitForTimeout(150); const nb = await first.boundingBox(); if (nb && Math.abs(nb.y - fb.y) < 1 && Math.abs(nb.x - fb.x) < 1) break; fb = nb; }
+  const under = await p.evaluate(([x, y]) => { let e = document.elementFromPoint(x, y), out = []; while (e && out.length < 5) { out.push(e.tagName + '.' + String(e.className).split(' ')[0]); e = e.parentElement; } return out.join('<'); }, [fb.x + 60, fb.y + fb.height / 2]);
+  await p.evaluate(() => { window.__ev = []; for (const t of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) document.addEventListener(t, (e) => window.__ev.push(t.replace('pointer', '') + ':' + String(e.target.className).split(' ')[0]), true); });
   await p.mouse.move(fb.x + 60, fb.y + fb.height / 2); await p.mouse.down();
   for (let i = 1; i <= 8; i++) await p.mouse.move(fb.x + 60 + i * 20, fb.y + fb.height / 2);
+  const mid = await first.evaluate((e) => e.style.transform || 'none');
   await p.mouse.up();
   await p.waitForSelector('.stops [data-stop="done"]', { timeout: 5000 }).catch(() => {});
-  ok('a swipe to the right marks a stop done', (await p.locator('.stops [data-stop="done"]').count()) === 1);
+  const states = await p.locator('.stops > li').evaluateAll((ls) => ls.map((l) => l.dataset.stop).join(' '));
+  ok('a swipe to the right marks a stop done', (await p.locator('.stops [data-stop="done"]').count()) === 1, `moved ${mid}, rows ${states}, under ${under}, events ${(await p.evaluate(() => window.__ev)).slice(0, 8).join(' ')}`);
 
   // Hold the third stop's handle and drag it to second place (rows further down sit under the tab bar).
   const before = await stopNames();
@@ -120,6 +126,21 @@ try {
   const hits = await p.waitForSelector('[data-hit]', { timeout: 10000 }).then(() => p.locator('[data-hit]').count()).catch(() => 0);
   console.log(`     (${hits} pizzerias found on OpenStreetMap near Berlinische Galerie)`);
   await shot('05-card-nearby');
+  await p.click('[data-card] .icon[aria-label="Close"]');
+
+  // The preview card: photo, two lines, Monday's hours, the way from the stop before, ticket, website, Maps, remove.
+  await p.locator('.stops .stop-main', { hasText: 'Gropius Bau' }).click();
+  await p.waitForSelector('[data-card]');
+  const photo = await p.waitForSelector('[data-card-photo]', { timeout: 60000 }).then(() => true).catch(() => false);
+  await p.waitForFunction(() => document.querySelector('[data-card-photo]')?.complete, null, { timeout: 15000 }).catch(() => {});
+  const card = async (sel) => (await p.locator(sel).count()) ? (await p.textContent(sel)).trim() : '';
+  const facts = { hours: await card('[data-card-hours]'), way: await card('[data-card-way]'), ticket: await card('[data-card-ticket]'), blurb: await card('[data-card-blurb]') };
+  ok('the card has a photo and two lines from Wikipedia', photo && /exhibition/i.test(facts.blurb), facts.blurb.slice(0, 80));
+  ok('the card gives the hours of the day it is planned on', facts.hours === '12:00 to 19:00', facts.hours);
+  ok('the card says how to get there and about tickets', /from Berlin Wall Memorial|from /.test(facts.way) && /Ticket|Booked|Free/.test(facts.ticket), `${facts.way} · ${facts.ticket}`);
+  ok('the card links to the website and to Maps, and offers Remove', (await p.locator('[data-card-site]').count()) === 1 && /maps/.test(await p.getAttribute('[data-card-maps]', 'href')) && (await p.locator('[data-card-remove]').count()) === 1);
+  await p.locator('[data-card]').evaluate((e) => e.closest('.sheet-body, .sheet, .floatcard')?.scrollTo?.(0, 0));
+  await shot('05b-card-preview');
   await p.click('[data-card] .icon[aria-label="Close"]');
 
   // To pick from: + puts a place on the day.

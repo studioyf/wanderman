@@ -1,4 +1,4 @@
-import { db, save } from './db';
+import { db, save, remove } from './db';
 import { uid, type Area, type Day, type Place, type Stop, type Trip } from './model';
 import { metres } from './tiles';
 import type { Tidy } from './plan';
@@ -36,6 +36,11 @@ export async function moveToDay(s: Stop, dayId: string) {
 }
 // Next time: off the day and back on the list to pick from.
 export const nextTime = (s: Stop) => save<Stop>('stops', { ...s, state: 'later' });
+// Out of the trip altogether: the place and its stops on any day (kept as deleted, so sync carries it).
+export async function removePlace(placeId: string) {
+  for (const s of await db.stops.where('placeId').equals(placeId).toArray()) if (!s.deleted) await remove('stops', s.id);
+  await remove('places', placeId);
+}
 
 export async function addToDay(tripId: string, placeId: string, dayId: string, after?: Stop) {
   const list = await dayList(dayId);
@@ -75,3 +80,7 @@ export const walkLink = (p: { lat?: number; lng?: number }) => apple
   : `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=walking`;
 export const googleSearchNear = (q: string, p: { lat?: number; lng?: number }) =>
   `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${p.lat},${p.lng},16z`;
+// The place itself in the phone's maps, for its reviews, photos and hours as Google or Apple know them.
+export const mapsLink = (p: { name: string; lat?: number; lng?: number; address?: string }) => apple
+  ? `https://maps.apple.com/?q=${encodeURIComponent(p.name)}&ll=${p.lat},${p.lng}`
+  : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([p.name, p.address].filter(Boolean).join(', '))}`;

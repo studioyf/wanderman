@@ -29,6 +29,12 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: '/index.html',
+        // Place photos from Wikimedia, kept once seen so the cards keep their picture with no signal.
+        runtimeCaching: [{
+          urlPattern: /^https:\/\/(upload|thumb|commons)\.wiki(media|pedia)\.org\//,
+          handler: 'CacheFirst',
+          options: { cacheName: 'wm-photos', expiration: { maxEntries: 400 }, cacheableResponse: { statuses: [0, 200] } },
+        }],
       },
     }),
   ],

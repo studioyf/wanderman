@@ -178,6 +178,16 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
 .card h3 { margin: 0; font-family: var(--name-font); font-weight: var(--name-weight); font-size: 1.4rem; line-height: 1.15; }
 .card-note { margin: .2rem 0; }
+.card-photo { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; background: var(--ground); display: block; margin-bottom: .2rem; }
+.card-facts { display: grid; grid-template-columns: auto 1fr; gap: .25rem .8rem; margin: .3rem 0; font-size: .92rem; }
+.card-facts dt { color: var(--muted); font-size: .8rem; padding-top: .1rem; white-space: nowrap; }
+.card-facts dd { margin: 0; }
+.card-facts dd.closed { color: var(--accent); font-weight: 600; }
+.card-blurb { margin: .2rem 0; color: var(--muted); font-size: .9rem; line-height: 1.45; }
+.card-blurb a { color: var(--muted); font-size: .8rem; }
+.card-links { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; align-items: center; font-size: .9rem; margin: .1rem 0 .3rem; }
+.card-links a { color: var(--ink); text-underline-offset: 3px; }
+.card-links .link { background: none; border: 0; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font: inherit; margin-left: auto; }
 .card-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: .45rem; margin: .5rem 0 .2rem; }
 .card-actions > * { min-height: 46px; white-space: nowrap; padding-left: .5rem; padding-right: .5rem; }
 a.secondary, .card-link { color: var(--ink); }
