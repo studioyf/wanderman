@@ -24,10 +24,17 @@ The feedback list is Terra's only, no Notion board (ANSWERS 4).
   search link), `parts/PickList.tsx` what is saved and on no day. `src/plan.ts` the day's arithmetic (legs, pace,
   detours, Tidy: timed stops keep their order, the rest go where they add least walking; a far meal is swapped for a
   saved one near the walk; over pace, stops whose note says drop go first), `src/actions.ts` every change to the days.
+- `src/details.ts` a place's photo, two lines, hours, fee and website (Nominatim one a second, then Wikidata and
+  Wikipedia), looked up once with signal and kept on the place; `src/hours.ts` OpenStreetMap hours read for one date.
+- `src/light.ts` the day's light (SunCalc, blue hour -4 to -8 degrees, golden under +6), in the trip city's time.
+- `src/notes.ts` + `parts/QuickNote.tsx`, `parts/NotesList.tsx` quick notes; photos, voice memos and ticket files
+  live in `db.blobs` on the device only (not synced yet). `parts/Anchors.tsx` flights, trains, stays on their day.
+- `src/berlin.ts` never raise BERLIN_VERSION during a trip (it reloads the days as planned); the arrival guide has
+  its own GUIDE_VERSION and replaces only the guide.
 - `test/e2e.mjs` the browser test (run with `terra-check`, never by hand); `npm test` the unit tests.
 
 ## Rounds
-Round 1 skeleton (#370, kept). Design pass with round 2's day folded in (#373), find nearby (#374). Then 3 the preview card (photo, today's hours), 4 on the road, 5 after: see the handover.
+Round 1 skeleton (#370, kept). Design pass with round 2's day folded in (#373), find nearby (#374). Round 3 the place card (#376) and round 4 on the road (light #377, quick notes #378, fixed times #379, arrival guide #380), built overnight 22 to 23 Nov, in To try. Next 5 after (journal, camera photo matching): see the handover.
 
 ## Hosting
 Cloudflare Worker `wanderman` serving the built app (`wrangler.jsonc`), built by Cloudflare from GitHub main on every push (Workers Builds): https://wanderman.verso-cloud.workers.dev (ANSWERS 6). Check the live `index-*.js` matches a local build before calling a round built.
