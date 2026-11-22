@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WanderMan layouts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@5.24.1/dist/maplibre-gl.js"></script>
+<style>
+:root {
+  --ground: #f4f1ea; --raised: #fbf9f4; --ink: #1b1a17; --muted: #6a655b; --line: #ddd6c8; --accent: #d9411e; --ok: #2f6b4f;
+  --page: #e7e3da; --note: #4a463f;
+  --serif: 'Newsreader', Georgia, serif; --sans: 'Hanken Grotesk', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.45 var(--sans); }
+.wrap { max-width: 1480px; margin: 0 auto; padding: 32px 16px 80px; }
+h1 { font: 600 34px/1.1 var(--serif); margin: 0 0 8px; }
+.intro { max-width: 760px; color: var(--note); }
+.direction { margin-top: 56px; }
+.direction > h2 { font: 600 26px/1.2 var(--serif); margin: 0; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.direction > h2 .letter { font: 700 14px var(--sans); background: var(--ink); color: var(--ground); border-radius: 4px; padding: 2px 8px; }
+.direction > h2 .rec { font: 700 12px var(--sans); color: var(--accent); border: 1.5px solid var(--accent); border-radius: 99px; padding: 2px 10px; letter-spacing: .04em; text-transform: uppercase; }
+.why { max-width: 760px; color: var(--note); margin: 8px 0 20px; }
+.why b { color: var(--ink); }
+.row { display: flex; gap: 28px; flex-wrap: wrap; align-items: flex-start; }
+.cap { font-size: 13px; color: var(--muted); margin-top: 10px; max-width: 300px; }
+
+/* A phone, drawn at 300 x 650, with the status bar and home indicator. */
+.phone { width: 300px; height: 650px; border-radius: 40px; background: #111; padding: 10px; box-shadow: 0 18px 40px rgba(0,0,0,.18); flex: none; }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 31px; overflow: hidden; background: var(--ground); font-size: 13px; }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 34px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; font: 600 12px var(--sans); z-index: 20; }
+.island { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 82px; height: 22px; background: #000; border-radius: 12px; z-index: 21; }
+.homebar { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 100px; height: 4px; background: var(--ink); border-radius: 2px; z-index: 30; opacity: .8; }
+.map { position: absolute; inset: 0; background: #ebe6db; }
+.maplibregl-ctrl-attrib { display: none !important; }
+
+/* Shared bits */
+.serif { font-family: var(--serif); }
+.muted { color: var(--muted); }
+.tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 74px; padding: 8px 6px 22px; background: var(--raised); border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 25; }
+.tabbar div { display: grid; justify-items: center; gap: 2px; font: 600 10.5px var(--sans); color: var(--muted); }
+.tabbar div.on { color: var(--accent); }
+.tabbar svg { width: 22px; height: 22px; }
+.pill { background: var(--raised); border-radius: 99px; box-shadow: 0 2px 10px rgba(0,0,0,.12); padding: 7px 12px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+.num { width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font: 700 11px var(--sans); color: #fff; flex: none; }
+.num.done { background: var(--muted) !important; }
+.stop { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start; padding: 8px 0; }
+.stop .name { font-weight: 600; font-size: 14px; line-height: 1.25; }
+.stop .sub { font-size: 11.5px; color: var(--muted); }
+.stop .time { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.leg { margin-left: 10px; border-left: 2px dotted var(--line); padding: 2px 0 2px 20px; font-size: 11px; color: var(--muted); }
+.leg.far { color: var(--accent); border-left-color: var(--accent); }
+.warn { background: #fbe5dd; color: #8a2a12; border-radius: 8px; padding: 7px 10px; font-size: 12px; line-height: 1.35; }
+.btn { border-radius: 10px; padding: 8px 10px; font-weight: 650; font-size: 12.5px; text-align: center; }
+.btn.solid { background: var(--ink); color: var(--ground); }
+.btn.line { border: 1.5px solid var(--ink); }
+.btn.accent { background: var(--accent); color: #fff; }
+.chip { border: 1.5px solid var(--line); border-radius: 99px; padding: 4px 10px; font-weight: 600; font-size: 12px; white-space: nowrap; background: var(--raised); }
+.chip.on { background: var(--ink); border-color: var(--ink); color: var(--ground); }
+
+/* A: map with a sheet */
+.sheet { position: absolute; left: 0; right: 0; background: var(--raised); border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.12); z-index: 15; padding: 8px 16px 0; }
+.grab { width: 36px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 8px; }
+.topfloat { position: absolute; top: 42px; left: 12px; right: 12px; display: flex; justify-content: space-between; z-index: 12; }
+
+/* B: day list */
+.daystrip { display: flex; gap: 6px; overflow: hidden; }
+
+/* Mac */
+.mac { width: 100%; max-width: 1180px; aspect-ratio: 16 / 10; background: #111; border-radius: 14px; padding: 8px; box-shadow: 0 18px 40px rgba(0,0,0,.18); }
+.win { position: relative; width: 100%; height: 100%; border-radius: 8px; overflow: hidden; background: var(--ground); display: grid; grid-template-columns: 230px 340px 1fr; font-size: 13.5px; }
+.side { background: #ece8df; border-right: 1px solid var(--line); padding: 14px 12px; overflow: hidden; }
+.side h4 { margin: 14px 0 4px; font: 700 10.5px var(--sans); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.side .it { display: flex; justify-content: space-between; padding: 5px 8px; border-radius: 6px; }
+.side .it.on { background: var(--ink); color: var(--ground); }
+.side .it .muted { font-size: 12px; }
+.mid { border-right: 1px solid var(--line); padding: 16px 18px; overflow: hidden; background: var(--raised); }
+.mapcol { position: relative; }
+.floatcard { position: absolute; right: 16px; top: 16px; width: 300px; background: var(--raised); border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,.18); padding: 14px; z-index: 5; }
+.photo { height: 120px; border-radius: 8px; background: linear-gradient(135deg, #8d8a80, #c9c2b2 55%, #e7dfcf); position: relative; overflow: hidden; }
+.photo::after { content: 'photo of the place'; position: absolute; left: 10px; bottom: 8px; font-size: 11px; color: rgba(255,255,255,.9); }
+@media (max-width: 700px) { .win { grid-template-columns: 1fr; } .side, .mid { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>WanderMan layouts, draft 1</h1>
+  <p class="intro">Three ways to lay out the phone, and one for the Mac, all showing Monday 23 in Berlin as you planned it. The pace warnings and walking order are round 2 features, drawn here so the layout is judged with them in place. The look is Paper for all of them; the look is a separate choice. Pick a direction, or a mix (for example A with B's day strip), and say what feels wrong.</p>
+
+  <section class="direction">
+    <h2><span class="letter">A</span> The map, with the day in a sheet <span class="rec">Recommended</span></h2>
+    <p class="why"><b>The map fills the screen; the day sits in a sheet you pull up or push down with your thumb</b>, the way Apple Maps works, so it is already learned. On foot the map is what you navigate by, and the list is always one thumb away. Four tabs along the bottom, where the thumb is: Today, Places, Trip, Notes. A tapped stop opens as its own card in the same sheet, with Done and Later in reach. The trade-off: the list never has the whole screen unless you pull the sheet all the way up.</p>
+    <div class="row">
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div class="map" id="mapA1"></div>
+        <div class="topfloat"><span class="pill">Berlin <span class="muted">▾</span></span><span class="pill" style="color:var(--ok)">● Offline ready</span></div>
+        <div class="sheet" style="top:300px;bottom:74px">
+          <div class="grab"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:20px;font-weight:600">Monday 23</span><span class="muted">7 stops · Mitte, Kreuzberg</span></div>
+          <div class="warn" style="margin:8px 0 4px">Full day: 7 stops, your pace is 4 per half day. <b>Push Topographie?</b></div>
+          <div class="stop"><span class="num" style="background:#1f4fb4">1</span><div><div class="name">Berlin Wall Memorial</div><div class="sub">Outdoor grounds, about 1h</div></div><span class="time">10:00</span></div>
+          <div class="leg">S-Bahn 18 min</div>
+          <div class="stop"><span class="num" style="background:#b07a12">2</span><div><div class="name">Gropius Bau</div><div class="sub">Gabriele Stötzer, until 6 Dec</div></div><span class="time">12:00</span></div>
+          <div class="leg">2 min walk</div>
+          <div class="stop"><span class="num" style="background:#b07a12">3</span><div><div class="name">Topographie des Terrors</div><div class="sub">Drop if too full</div></div><span class="time"></span></div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">Today, the sheet half up. Numbers are the walking order; the day's warning sits on top.</div></div>
+
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div class="map" id="mapA2"></div>
+        <div class="topfloat"><span class="pill">‹ Monday</span></div>
+        <div class="sheet" style="top:250px;bottom:74px">
+          <div class="grab"></div>
+          <div class="photo" style="height:100px"></div>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:20px;font-weight:600">Gropius Bau</span><span class="muted">Museum</span></div>
+          <div class="muted" style="font-size:12px">Open today 12:00 to 19:00 · 22 min from here</div>
+          <div style="margin:6px 0 10px;font-size:12.5px">Gabriele Stötzer (photography, performance, until 6 Dec), Kreuzberg: Art and Migration, Christoph Schlingensief.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><span class="btn accent">Done</span><span class="btn line">Later</span><span class="btn line">Walk there</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:12px"><span class="muted">gropiusbau.de</span><span class="muted">Remove from today</span></div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">A stop tapped: its card replaces the list in the sheet. Done, Later and Walk there under the thumb.</div></div>
+
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div class="map" id="mapA3"></div>
+        <div class="sheet" style="top:96px;bottom:74px">
+          <div class="grab"></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:20px;font-weight:600">Monday 23</span><span class="muted">7 stops</span></div>
+          <div class="stop"><span class="num" style="background:#1f4fb4">1</span><div><div class="name">Berlin Wall Memorial</div><div class="sub">Outdoor grounds, about 1h</div></div><span class="time">10:00</span></div>
+          <div class="leg">S-Bahn 18 min</div>
+          <div class="stop"><span class="num" style="background:#b07a12">2</span><div><div class="name">Gropius Bau</div><div class="sub">Gabriele Stötzer</div></div><span class="time">12:00</span></div>
+          <div class="leg">2 min walk</div>
+          <div class="stop"><span class="num" style="background:#b07a12">3</span><div><div class="name">Topographie des Terrors</div><div class="sub">Drop if too full</div></div></div>
+          <div class="leg far">U-Bahn 25 min · far from the next stop</div>
+          <div class="stop"><span class="num" style="background:#0f7c86">4</span><div><div class="name">Gazzo</div><div class="sub">Lunch, Neukölln</div></div><span class="time">13:45</span></div>
+          <div class="leg far">U-Bahn 25 min back</div>
+          <div class="stop"><span class="num" style="background:#b07a12">5</span><div><div class="name">Berlinische Galerie</div><div class="sub">About 1h30</div></div><span class="time">15:00</span></div>
+          <div class="leg">U-Bahn 20 min</div>
+          <div class="stop"><span class="num" style="background:#d9411e">6</span><div><div class="name">C/O Berlin</div><div class="sub">Carrie Mae Weems</div></div><span class="time">17:30</span></div>
+          <div class="leg">12 min walk</div>
+          <div class="stop"><span class="num" style="background:#d9411e">7</span><div><div class="name">Vegang</div><div class="sub">Dinner</div></div></div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">The sheet pulled up: the whole day as a list, with the time between stops. Gazzo is flagged as far.</div></div>
+    </div>
+  </section>
+
+  <section class="direction">
+    <h2><span class="letter">B</span> The day as a list, the map as a strip</h2>
+    <p class="why"><b>The day reads top to bottom like your Notion page</b>, with a strip of days to swipe across and a short map above that opens full screen on a tap. It is the calmest to read and the closest to how you plan. The trade-off: on the street, finding your way means one more tap to open the map.</p>
+    <div class="row">
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div style="position:absolute;top:38px;left:0;right:0;padding:0 14px;z-index:5">
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:24px;font-weight:600">Berlin</span><span class="muted" style="font-size:12px">21 to 24 Nov</span></div>
+          <div class="daystrip" style="margin-top:8px"><span class="chip">Sat 21 ✓</span><span class="chip">Sun 22 ✓</span><span class="chip on">Mon 23</span><span class="chip">Tue 24</span></div>
+        </div>
+        <div class="map" id="mapB1" style="top:118px;bottom:auto;height:150px;left:14px;right:14px;border-radius:12px;overflow:hidden"></div>
+        <div style="position:absolute;top:280px;left:14px;right:14px;bottom:74px;overflow:hidden">
+          <div class="warn" style="margin-bottom:4px">Full day: 7 stops. <b>Push Topographie to later?</b></div>
+          <div class="stop"><span class="num" style="background:#1f4fb4">1</span><div><div class="name">Berlin Wall Memorial</div><div class="sub">Outdoor grounds, about 1h</div></div><span class="time">10:00</span></div>
+          <div class="leg">S-Bahn 18 min</div>
+          <div class="stop"><span class="num" style="background:#b07a12">2</span><div><div class="name">Gropius Bau</div><div class="sub">Gabriele Stötzer</div></div><span class="time">12:00</span></div>
+          <div class="leg">2 min walk</div>
+          <div class="stop"><span class="num" style="background:#b07a12">3</span><div><div class="name">Topographie des Terrors</div><div class="sub">Drop if too full</div></div></div>
+          <div class="leg far">U-Bahn 25 min · far</div>
+          <div class="stop"><span class="num" style="background:#0f7c86">4</span><div><div class="name">Gazzo</div><div class="sub">Lunch, Neukölln</div></div><span class="time">13:45</span></div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">Days to swipe across, a map strip, the day as a list. Swipe a stop right for Done, left for Later.</div></div>
+    </div>
+  </section>
+
+  <section class="direction">
+    <h2><span class="letter">C</span> Cards on the map</h2>
+    <p class="why"><b>The map fills the screen and the stops are cards you swipe through along the bottom</b>, the map following each card, like browsing places in Google Maps or Airbnb. The most visual, and good for "what is next". The trade-off: only one stop is visible at a time, so the shape of the whole day is harder to see.</p>
+    <div class="row">
+      <div><div class="phone"><div class="screen">
+        <div class="status"><span>10:42</span><span>●●● 5G</span></div><div class="island"></div>
+        <div class="map" id="mapC1"></div>
+        <div class="topfloat" style="justify-content:flex-start;gap:6px;overflow:hidden"><span class="chip">Sun 22 ✓</span><span class="chip on">Mon 23</span><span class="chip">Tue 24</span><span class="chip">All places</span></div>
+        <div style="position:absolute;left:0;right:0;bottom:84px;display:flex;gap:10px;padding:0 14px;z-index:12">
+          <div style="flex:none;width:236px;background:var(--raised);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:10px">
+            <div class="photo" style="height:84px"></div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px"><span class="num" style="background:#b07a12">2</span><span class="serif" style="font-size:17px;font-weight:600">Gropius Bau</span></div>
+            <div class="muted" style="font-size:11.5px;margin:2px 0 8px">12:00 · open till 19:00 · 2 min to the next</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><span class="btn accent">Done</span><span class="btn line">Later</span></div>
+          </div>
+          <div style="flex:none;width:236px;background:var(--raised);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:10px;opacity:.9">
+            <div class="photo" style="height:84px"></div>
+          </div>
+        </div>
+        <div class="tabbar">
+          <div class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Today</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Places</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Trip</div>
+          <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 4h14v12l-5 4H5z"/><path d="M14 20v-4h5"/></svg>Notes</div>
+        </div>
+        <div class="homebar"></div>
+      </div></div><div class="cap">One stop at a time, swiped along the bottom; the map moves to each.</div></div>
+    </div>
+  </section>
+
+  <section class="direction">
+    <h2><span class="letter">M</span> On the Mac: three columns <span class="rec">Recommended</span></h2>
+    <p class="why"><b>A sidebar with the trip's days, its areas, the Inbox and the arrival guide; the chosen day or area as a list in the middle; the map on the right, as large as the window allows.</b> Planning is moving things between days and seeing them on the map, so both stay on screen at once; a stop clicked in the list or on the map opens as a card floating over the map. On the iPad the same layout, the sidebar folding away in portrait.</p>
+    <div class="mac"><div class="win">
+      <div class="side">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:20px;font-weight:600">Berlin</span><span class="muted" style="font-size:11px">‹ Trips</span></div>
+        <div class="muted" style="font-size:11.5px">21 to 24 Nov · The Hoxton</div>
+        <h4>Days</h4>
+        <div class="it"><span>Sat 21</span><span class="muted">2 ✓</span></div>
+        <div class="it"><span>Sun 22</span><span class="muted">3 ✓</span></div>
+        <div class="it on"><span>Mon 23</span><span>7</span></div>
+        <div class="it"><span>Tue 24</span><span class="muted">flight</span></div>
+        <h4>Areas</h4>
+        <div class="it"><span><span class="num" style="background:#d9411e;width:9px;height:9px;margin-right:6px"></span>Charlottenburg</span><span class="muted">5</span></div>
+        <div class="it"><span><span class="num" style="background:#b07a12;width:9px;height:9px;margin-right:6px"></span>Kreuzberg</span><span class="muted">7</span></div>
+        <div class="it"><span><span class="num" style="background:#1f4fb4;width:9px;height:9px;margin-right:6px"></span>Mitte</span><span class="muted">10</span></div>
+        <div class="it"><span><span class="num" style="background:#2f6b4f;width:9px;height:9px;margin-right:6px"></span>Tiergarten</span><span class="muted">6</span></div>
+        <h4>Also</h4>
+        <div class="it"><span>Inbox</span><span class="muted">2</span></div>
+        <div class="it"><span>Anchors</span><span class="muted">3</span></div>
+        <div class="it"><span>Arrival guide</span><span></span></div>
+        <div class="it"><span>Notes</span><span class="muted">0</span></div>
+      </div>
+      <div class="mid">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:24px;font-weight:600">Monday 23</span><span class="muted">7 stops</span></div>
+        <div class="warn" style="margin:8px 0">Full day: 7 stops, your pace is 4 per half day. <b>Push Topographie?</b></div>
+        <div class="stop"><span class="num" style="background:#1f4fb4">1</span><div><div class="name">Berlin Wall Memorial</div><div class="sub">Outdoor grounds, about 1h</div></div><span class="time">10:00</span></div>
+        <div class="leg">S-Bahn 18 min</div>
+        <div class="stop" style="background:#f1ebdf;margin:0 -8px;padding:8px"><span class="num" style="background:#b07a12">2</span><div><div class="name">Gropius Bau</div><div class="sub">Gabriele Stötzer</div></div><span class="time">12:00</span></div>
+        <div class="leg">2 min walk</div>
+        <div class="stop"><span class="num" style="background:#b07a12">3</span><div><div class="name">Topographie des Terrors</div><div class="sub">Drop if too full</div></div></div>
+        <div class="leg far">U-Bahn 25 min · far from the next stop</div>
+        <div class="stop"><span class="num" style="background:#0f7c86">4</span><div><div class="name">Gazzo</div><div class="sub">Lunch, Neukölln</div></div><span class="time">13:45</span></div>
+        <div class="leg far">U-Bahn 25 min back</div>
+        <div class="stop"><span class="num" style="background:#b07a12">5</span><div><div class="name">Berlinische Galerie</div><div class="sub">About 1h30</div></div><span class="time">15:00</span></div>
+        <div class="leg">U-Bahn 20 min</div>
+        <div class="stop"><span class="num" style="background:#d9411e">6</span><div><div class="name">C/O Berlin</div><div class="sub">Carrie Mae Weems</div></div><span class="time">17:30</span></div>
+      </div>
+      <div class="mapcol">
+        <div class="map" id="mapM"></div>
+        <div class="floatcard">
+          <div class="photo"></div>
+          <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:baseline"><span class="serif" style="font-size:20px;font-weight:600">Gropius Bau</span><span class="muted">Museum</span></div>
+          <div class="muted" style="font-size:12px">Open today 12:00 to 19:00 · Niederkirchnerstraße 7</div>
+          <div style="margin:6px 0 10px;font-size:12.5px">Gabriele Stötzer (photography, performance, until 6 Dec), Kreuzberg: Art and Migration, Christoph Schlingensief.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px"><span class="btn accent">Done</span><span class="btn line">Later</span><span class="btn line">Move to…</span></div>
+        </div>
+      </div>
+    </div></div>
+    <div class="cap" style="max-width:none">Drag a stop up or down to reorder, or onto another day in the sidebar to move it.</div>
+  </section>
+</div>
+
+<script>
+// Monday 23 in walking order, with each stop's area colour.
+const day = [
+  [13.39085, 52.53582, '#1f4fb4'], [13.3817, 52.5066, '#b07a12'], [13.3838, 52.5067, '#b07a12'], [13.42588, 52.49121, '#0f7c86'],
+  [13.3988, 52.5032, '#b07a12'], [13.3328, 52.5070, '#d9411e'], [13.3166, 52.5063, '#d9411e'],
+];
+const base = [13.3298, 52.5016];
+const tint = (style) => {
+  const set = (id, prop, v) => { const l = style.layers.find((x) => x.id === id); if (l) l.paint = { ...l.paint, [prop]: v }; };
+  set('background', 'background-color', '#efeae0'); set('park', 'fill-color', '#e2e2d2'); set('water', 'fill-color', '#c9d3d6');
+  set('building', 'fill-color', '#e7e1d5'); set('landuse_residential', 'fill-color', '#ebe6db'); set('landcover_wood', 'fill-color', '#dcdccb');
+  return style;
+};
+const views = {
+  mapA1: { bounds: [[13.30, 52.485], [13.44, 52.545]], padding: { top: 70, bottom: 360, left: 20, right: 20 } },
+  mapA2: { center: [13.3817, 52.5066], zoom: 14.6, offset: [0, -150] },
+  mapA3: { bounds: [[13.30, 52.485], [13.44, 52.545]], padding: { top: 10, bottom: 560, left: 20, right: 20 } },
+  mapB1: { bounds: [[13.30, 52.485], [13.44, 52.545]], padding: 12 },
+  mapC1: { bounds: [[13.36, 52.495], [13.42, 52.52]], padding: { top: 60, bottom: 230, left: 10, right: 10 } },
+  mapM: { center: [13.335, 52.515], zoom: 12.6 },
+};
+fetch('https://tiles.openfreemap.org/styles/positron').then((r) => r.json()).then((style) => {
+  for (const [id, v] of Object.entries(views)) {
+    const el = document.getElementById(id); if (!el) continue;
+    const m = new maplibregl.Map({ container: el, style: tint(structuredClone(style)), interactive: false, attributionControl: false, ...(v.center ? { center: v.center, zoom: v.zoom } : { bounds: v.bounds, fitBoundsOptions: { padding: v.padding } }) });
+    m.on('load', () => {
+      if (v.offset) m.panBy(v.offset.map((n) => -n), { animate: false });
+      m.addSource('line', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: day.map((d) => [d[0], d[1]]) } } });
+      m.addLayer({ id: 'line', type: 'line', source: 'line', paint: { 'line-color': '#1b1a17', 'line-width': 2, 'line-dasharray': [1, 2], 'line-opacity': .55 } });
+      day.forEach((d, i) => {
+        const e = document.createElement('div');
+        e.className = 'num'; e.style.background = d[2]; e.style.border = '2px solid #fff'; e.style.boxShadow = '0 1px 4px rgba(0,0,0,.3)';
+        if (id !== 'mapA2' || i === 1) { e.textContent = i + 1; new maplibregl.Marker({ element: e }).setLngLat([d[0], d[1]]).addTo(m); }
+      });
+      const b = document.createElement('div'); b.style.cssText = 'width:14px;height:14px;background:#1b1a17;border:2px solid #fff;border-radius:3px';
+      new maplibregl.Marker({ element: b }).setLngLat(base).addTo(m);
+    });
+  }
+});
+</script>
+</body>
+</html>
