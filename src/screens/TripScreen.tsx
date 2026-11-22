@@ -102,12 +102,14 @@ export function TripScreen({ id }: { id: string }) {
           )}
           {tab === 'days' && (
             <div className="scroll">
-              <p className="muted small">The day itself, loose and in walking order, arrives in round 2. For now, the days as planned.</p>
+              <p className="muted small">The day itself, loose and in walking order, arrives in round 2. For now, the days as planned, with what is done.</p>
               {days.map((d) => (
                 <div key={d.id} className="group">
                   <h2>{dayLabel(d.date)}<span className="muted"> · {d.title}</span></h2>
                   {stops.filter((s) => s.dayId === d.id).sort((a, b) => a.order - b.order).map((s) => { const p = byId.get(s.placeId); return p ? (
-                    <button key={s.id} className="place" onClick={() => setSel(p.id)}><span className="name">{p.name}</span>{s.time && <span className="muted small">planned {s.time}</span>}</button>) : null; })}
+                    <button key={s.id} className={'place stop-' + s.state} data-stop={s.state} onClick={() => setSel(p.id)}>
+                      <span className="name">{p.name}{s.state === 'done' && <span className="tag">Done</span>}{s.note && <span className="muted small stop-note">{s.note}</span>}</span>
+                      {s.time && <span className="muted small">{s.time}</span>}</button>) : null; })}
                 </div>
               ))}
               {!days.length && <p className="empty">No days yet.</p>}

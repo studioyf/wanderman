@@ -110,3 +110,5 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 .maplibregl-ctrl-attrib { font-size: 10px; }
 .signin { display: grid; gap: .6rem; }
+.stop-note { display: block; font-weight: 400; }
+.stop-done .name { color: var(--muted); }

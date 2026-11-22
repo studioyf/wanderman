@@ -10,9 +10,11 @@ import { App } from './App';
 import { applyLook, savedLook } from './looks';
 import { whenChanged } from './db';
 import { startSync, syncSoon } from './sync';
+import { refreshBerlin } from './berlin';
 
 applyLook(savedLook());
 registerSW({ immediate: true });
 whenChanged(syncSoon);
 startSync();
+refreshBerlin().catch(() => {});
 createRoot(document.getElementById('root')!).render(<App />);

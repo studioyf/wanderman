@@ -49,7 +49,7 @@ try {
   await p.click('#add-berlin');
   await p.waitForSelector('[data-place]');
   const placeRows = await p.locator('[data-place]').count();
-  ok('Berlin opens with its places listed by area', placeRows >= 27 && (await p.locator('[data-area]').count()) === 6, `${placeRows} places`);
+  ok('Berlin opens with its places listed by area', placeRows >= 27 && (await p.locator('[data-area]').count()) === 7, `${placeRows} places`);
   await mapDrawn();
   const dots = await p.evaluate(() => window.__wmMap.querySourceFeatures('places').length);
   ok('the places are on the map', dots >= 25, `${dots} dots`);
@@ -64,6 +64,13 @@ try {
   await p.waitForSelector('[data-peek]');
   ok('tapping a place shows its card', /Cattelan/.test(await p.textContent('[data-peek]')));
   await shot('03-place');
+
+  // The days, with what is already done (the trip as it went, #372).
+  await p.click('.tabs button:has-text("Days")');
+  await p.waitForSelector('[data-stop]');
+  ok('the days show what is done', (await p.locator('[data-stop="done"]').count()) === 5 && /Berlin Wall Memorial/.test(await p.textContent('.scroll')));
+  await shot('03b-days');
+  await p.click('.tabs button:has-text("Places")');
 
   // Make sure the service worker is in charge of the page before the signal goes.
   await p.evaluate(() => navigator.serviceWorker.ready);
