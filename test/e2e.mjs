@@ -37,40 +37,100 @@ const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceSc
 const p = await ctx.newPage();
 p.on('pageerror', (e) => console.log('PAGEERROR', e.message.slice(0, 300)));
 p.on('console', (m) => { if (m.type() === 'error') console.log('CONSOLE', m.text().slice(0, 200)); });
-const shot = (n) => p.screenshot({ path: `${OUT}/${n}.png` });
+// Let the map settle first: a frame asked for mid-flight can stall software drawing past the timeout.
+const shot = async (n) => {
+  await p.waitForFunction(() => { const m = window.__wmMap; return !m || (!m.isMoving() && m.areTilesLoaded()); }, null, { timeout: 15000, polling: 250 }).catch(() => {});
+  await p.screenshot({ path: `${OUT}/${n}.png`, timeout: 60000 });
+};
 const mapDrawn = (ms = 60000) => p.waitForFunction(() => { const m = window.__wmMap; return m && m.loaded() && m.areTilesLoaded() && document.querySelector('.map')?.dataset.ready === '1'; }, null, { timeout: ms, polling: 500 });
 
 try {
+  const TRIP = URL_ + '#/trip/0b3e1100-0000-4000-8000-000000000001';
+  const dots = () => p.evaluate(() => (window.__wmMap?.querySourceFeatures('stops').length || 0) + (window.__wmMap?.querySourceFeatures('others').length || 0));
+  const stopNames = () => p.locator('.stops .stop-main .name').allTextContents();
+  // Go to a day of the Berlin trip through the Trip tab, whatever today is.
+  const openDay = async (label) => { await p.click('[data-tab="trip"]'); await p.locator('.info .menu-item', { hasText: label }).click(); await p.waitForSelector('[data-day]'); };
+
   await p.goto(URL_);
   await p.waitForSelector('#add-berlin');
   ok('the app opens with no trips and offers Berlin', (await p.locator('.trip-card').count()) === 0);
   await shot('01-home');
 
   await p.click('#add-berlin');
-  await p.waitForSelector('[data-place]');
-  const placeRows = await p.locator('[data-place]').count();
-  ok('Berlin opens with its places listed by area', placeRows >= 27 && (await p.locator('[data-area]').count()) === 7, `${placeRows} places`);
+  await p.waitForSelector('.trip-phone .sheet');
   await mapDrawn();
-  const dots = await p.evaluate(() => window.__wmMap.querySourceFeatures('places').length);
-  ok('the places are on the map', dots >= 25, `${dots} dots`);
+  ok('Berlin opens on the map, the day in a sheet, four tabs', (await p.locator('.tabbar button').count()) === 4 && (await dots()) >= 25, `${await dots()} dots`);
   await shot('02-berlin');
 
   await p.waitForSelector('[data-offline="saved"]', { timeout: 180000 });
-  const saved = await p.evaluate(async () => { const c = await caches.open('wm-map'); const k = (await c.keys()).map((r) => r.url); return { n: k.length, extras: k.filter((u) => /sprites|fonts/.test(u)).map((u) => u.split('/').slice(-2).join('/')) }; });
-  ok('the map saves itself for offline', saved.n > 100 && saved.extras.length >= 13, `${saved.n} pieces kept; ${saved.extras.join(' ')}`);
+  const saved = await p.evaluate(async () => { const c = await caches.open('wm-map'); const k = (await c.keys()).map((r) => r.url); return { n: k.length, extras: k.filter((u) => /sprites|fonts/.test(u)).length }; });
+  ok('the map saves itself for offline', saved.n > 100 && saved.extras >= 13, `${saved.n} pieces kept`);
 
-  // Tap a place in the list: it opens a short card.
-  await p.locator('[data-place]').filter({ hasText: 'Neue Nationalgalerie' }).click();
-  await p.waitForSelector('[data-peek]');
-  ok('tapping a place shows its card', /Cattelan/.test(await p.textContent('[data-peek]')));
-  await shot('03-place');
+  // Sunday as it went: all done.
+  await openDay('Sun 22 Nov');
+  ok('Sunday shows what was done', (await p.locator('.stops [data-stop="done"]').count()) === 3);
 
-  // The days, with what is already done (the trip as it went, #372).
-  await p.click('.tabs button:has-text("Days")');
-  await p.waitForSelector('[data-stop]');
-  ok('the days show what is done', (await p.locator('[data-stop="done"]').count()) === 5 && /Berlin Wall Memorial/.test(await p.textContent('.scroll')));
-  await shot('03b-days');
-  await p.click('.tabs button:has-text("Places")');
+  // Monday as planned: seven stops, too full, Gazzo far off the walk.
+  await openDay('Mon 23 Nov');
+  const monday = await stopNames();
+  ok('Monday reads in order with the way between stops', monday.length === 7 && monday[0] === 'Berlin Wall Memorial' && (await p.locator('.stops .leg').count()) === 6, monday.join(', '));
+  ok('Monday says it is too full', await p.locator('[data-warn]').isVisible());
+  ok('Gazzo is flagged far off the walk', /Gazzo/.test(await p.locator('.stop-row', { has: p.locator('.leg.far') }).first().textContent()));
+  await p.click('[data-tab="today"]'); // back to the sheet's day view: Today shows the last day opened
+  await shot('03-monday');
+
+  // Tidy: before and after, then accepted.
+  await p.click('[data-tidy]');
+  await p.waitForSelector('.tidy-cols');
+  await shot('04-tidy');
+  await p.click('[data-tidy-accept]');
+  await p.waitForFunction(() => document.querySelectorAll('.stops .stop-main').length < 7);
+  const tidied = await stopNames();
+  ok('Tidy swaps Gazzo for a meal near the walk and pushes Topographie', !tidied.includes('Gazzo') && !tidied.includes('Topographie des Terrors') && tidied[0] === 'Berlin Wall Memorial', tidied.join(', '));
+
+  // Swipe the first stop right: done.
+  const first = p.locator('.stops .stop-main').first();
+  await first.scrollIntoViewIfNeeded();
+  const fb = await first.boundingBox();
+  await p.mouse.move(fb.x + 60, fb.y + fb.height / 2); await p.mouse.down();
+  for (let i = 1; i <= 8; i++) await p.mouse.move(fb.x + 60 + i * 20, fb.y + fb.height / 2);
+  await p.mouse.up();
+  await p.waitForSelector('.stops [data-stop="done"]', { timeout: 5000 }).catch(() => {});
+  ok('a swipe to the right marks a stop done', (await p.locator('.stops [data-stop="done"]').count()) === 1);
+
+  // Hold the third stop's handle and drag it to second place (rows further down sit under the tab bar).
+  const before = await stopNames();
+  await p.locator('.stops .handle').nth(2).scrollIntoViewIfNeeded();
+  const h = await p.locator('.stops .handle').nth(2).boundingBox(), target = await p.locator('.stops .stop-main').nth(1).boundingBox();
+  await p.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await p.mouse.down();
+  for (let i = 1; i <= 12; i++) await p.mouse.move(h.x + h.width / 2, h.y + h.height / 2 + ((target.y + 6) - (h.y + h.height / 2)) * i / 12);
+  await p.mouse.up();
+  await p.waitForTimeout(400);
+  const after = await stopNames();
+  ok('holding the handle and dragging reorders the day', after[1] === before[2] && after[2] === before[1], after.join(', '));
+
+  // A stop's card, and finding something near it.
+  await p.locator('.stops .stop-main', { hasText: 'Berlinische Galerie' }).click();
+  await p.waitForSelector('[data-card]');
+  ok('tapping a stop opens its card in the sheet', /Lovis Corinth/.test(await p.textContent('[data-card]')));
+  await p.locator('[data-nearby] .chip', { hasText: 'Pizzeria' }).click();
+  await p.waitForSelector('[data-google]');
+  const g = await p.getAttribute('[data-google]', 'href');
+  ok('Find near here searches around the stop, here and in Google Maps', /google\.com\/maps\/search\/Pizzeria\/@52\.50/.test(g), g);
+  const hits = await p.waitForSelector('[data-hit]', { timeout: 10000 }).then(() => p.locator('[data-hit]').count()).catch(() => 0);
+  console.log(`     (${hits} pizzerias found on OpenStreetMap near Berlinische Galerie)`);
+  await shot('05-card-nearby');
+  await p.click('[data-card] .icon[aria-label="Close"]');
+
+  // To pick from: + puts a place on the day.
+  await p.click('[data-tab="places"]');
+  await p.waitForSelector('[data-pick]');
+  const pick = p.locator('.pick-row', { hasText: 'Checkpoint Charlie' });
+  ok('Places lists what is saved and on no day', (await pick.count()) === 1 && (await p.locator('.pick-row', { hasText: 'Gropius Bau' }).count()) === 0);
+  await shot('06-pick');
+  await pick.locator('.add').click();
+  await p.click('[data-tab="today"]');
+  ok('+ puts it on the day', (await stopNames()).includes('Checkpoint Charlie'));
 
   // Make sure the service worker is in charge of the page before the signal goes.
   await p.evaluate(() => navigator.serviceWorker.ready);
@@ -79,26 +139,20 @@ try {
 
   // Flight mode.
   await ctx.setOffline(true);
-  const fromNet = [];
+  const fromNet = [], failed = [];
   p.on('response', (r) => { if (/openfreemap/.test(r.url()) && !r.fromServiceWorker()) fromNet.push(r.url()); });
-  const failed = [];
   p.on('requestfailed', (r) => { if (/openfreemap/.test(r.url())) failed.push(r.url()); });
   await p.reload();
-  await p.waitForSelector('[data-place]', { timeout: 20000 });
-  ok('with no signal, the trip still opens', (await p.locator('[data-place]').count()) === placeRows);
+  await p.waitForSelector('.trip-phone .sheet', { timeout: 20000 });
   await mapDrawn(60000).catch(() => {});
-  const offlineDots = await p.evaluate(() => window.__wmMap?.querySourceFeatures('places').length || 0);
   const tilesShown = await p.evaluate(() => window.__wmMap?.querySourceFeatures('openmaptiles', { sourceLayer: 'transportation' }).length || 0);
-  ok('with no signal, the map draws from what was saved', offlineDots >= 25 && tilesShown > 0 && failed.length === 0, `${offlineDots} dots, ${tilesShown} streets drawn, ${failed.length} failed ${failed[0] || ''}`);
+  ok('with no signal, the trip and its map open from what was saved', (await dots()) >= 25 && tilesShown > 0 && failed.length === 0, `${await dots()} dots, ${tilesShown} streets drawn, ${failed.length} failed ${failed[0] || ''}`);
   ok('with no signal, nothing is asked of the network', fromNet.length === 0, fromNet[0]);
-  ok('the screen says so', /Works offline/.test(await p.textContent('.bar')));
-  await shot('04-offline');
-
-  // Zoom right in on Kulturforum: street level must still draw.
+  ok('the screen says so', /Works offline/.test(await p.textContent('.floats')));
+  await shot('07-offline');
   await p.evaluate(() => window.__wmMap.jumpTo({ center: [13.3675, 52.5069], zoom: 16 }));
   await mapDrawn(30000).catch(() => {});
   ok('street level draws offline', failed.length === 0, failed[0]);
-  await shot('05-offline-street');
   await ctx.setOffline(false);
 
   // The three looks.
@@ -108,22 +162,31 @@ try {
   for (const look of ['paper', 'signal', 'atlas']) {
     await p.goto(URL_ + '#/settings'); await p.click(`[data-look-choice="${look}"]`);
     const set = await p.evaluate(() => document.documentElement.dataset.look);
-    await p.goto(URL_ + '#/trip/0b3e1100-0000-4000-8000-000000000001'); await p.waitForSelector('[data-place]'); await mapDrawn().catch(() => {});
-    await shot('06-look-' + look);
+    await p.goto(TRIP); await p.waitForSelector('.sheet'); await mapDrawn().catch(() => {});
+    await shot('08-look-' + look);
     ok(`the ${look} look applies and stays`, set === look && (await p.evaluate(() => document.documentElement.dataset.look)) === look);
   }
+  await p.goto(URL_ + '#/settings'); await p.click('[data-look-choice="paper"]');
 
   // Pace is a setting.
-  await p.goto(URL_ + '#/settings'); await p.waitForSelector('.stepper');
+  await p.waitForSelector('.stepper');
   await p.locator('.stepper').first().getByLabel('Less').click();
   ok('pace can be changed', (await p.locator('.stepper strong').first().textContent()) === '3');
+  await p.locator('.stepper').first().getByLabel('More').click();
 
-  // On the Mac: list beside the map.
+  // On the Mac: three columns, and a place dragged from the list onto a day.
   await p.setViewportSize({ width: 1440, height: 900 });
-  await p.goto(URL_ + '#/trip/0b3e1100-0000-4000-8000-000000000001'); await p.waitForSelector('[data-place]'); await mapDrawn().catch(() => {});
-  await shot('07-mac');
-  const panelLeft = await p.evaluate(() => document.querySelector('.panel').getBoundingClientRect().left);
-  ok('on a wide screen the list sits beside the map', panelLeft < 10);
+  await p.goto(TRIP); await p.waitForSelector('.trip-wide'); await mapDrawn().catch(() => {});
+  ok('on a wide screen: days, the day, the map', (await p.locator('[data-side-day]').count()) === 4 && (await p.locator('.trip-wide .mid [data-day]').count()) === 1);
+  await p.click('[data-side-day="2026-11-23"]');
+  await p.locator('.mid .stop-main', { hasText: 'Gropius Bau' }).click();
+  await p.waitForSelector('.floatcard [data-card]');
+  await shot('09-mac');
+  await p.click('[data-side="pick"]');
+  await p.locator('.pick-row', { hasText: 'Gemäldegalerie' }).dragTo(p.locator('[data-side-day="2026-11-24"]'));
+  await p.click('[data-side-day="2026-11-24"]');
+  ok('on the Mac a place dragged onto a day goes to that day', (await stopNames()).includes('Gemäldegalerie'));
+  await shot('10-mac-pick');
 } catch (e) {
   ok('the run finished', false, e.message);
   await shot('99-failure').catch(() => {});
