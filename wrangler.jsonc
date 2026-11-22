@@ -1,0 +1,7 @@
+// WanderMan on Cloudflare: the built app served as static files by a Worker, every unknown address
+// answered with the app itself. Cloudflare builds it from GitHub main: npm run build, then npx wrangler deploy.
+{
+  "name": "wanderman",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" }
+}
