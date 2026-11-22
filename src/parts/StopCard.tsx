@@ -11,7 +11,7 @@ import { Overlay } from './Overlay';
 import type { TripData } from './useTrip';
 
 // A place, opened: what it is, what you noted, and what to do with it.
-export function StopCard({ t, place, stop, day, onClose, onAdded }: { t: TripData; place: Place; stop?: Stop; day?: Day; onClose: () => void; onAdded: (p: Place) => void }) {
+export function StopCard({ t, place, stop, day, onClose, onAdded, onNote }: { t: TripData; place: Place; stop?: Stop; day?: Day; onClose: () => void; onAdded: (p: Place) => void; onNote?: () => void }) {
   const [later, setLater] = useState(false), [pickDay, setPickDay] = useState(false), [gone, setGone] = useState(false), [noPhoto, setNoPhoto] = useState(false);
   const online = useOnline();
   // First time this place is opened with signal and it was never looked up: fetch its photo, hours and text now.
@@ -64,6 +64,7 @@ export function StopCard({ t, place, stop, day, onClose, onAdded }: { t: TripDat
       </div>
       <div className="card-links">
         {site && <a data-card-site href={site} target="_blank" rel="noreferrer">Website</a>}
+        {onNote && <button className="link" data-card-note onClick={onNote}>Note</button>}
         <a data-card-maps href={mapsLink(place)} target="_blank" rel="noreferrer">Open in Maps</a>
         <button className="link danger" data-card-remove onClick={() => setGone(true)}>Remove</button>
       </div>

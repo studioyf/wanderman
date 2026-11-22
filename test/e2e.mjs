@@ -59,7 +59,7 @@ try {
   await p.click('#add-berlin');
   await p.waitForSelector('.trip-phone .sheet');
   await mapDrawn();
-  ok('Berlin opens on the map, the day in a sheet, four tabs', (await p.locator('.tabbar button').count()) === 4 && (await dots()) >= 25, `${await dots()} dots`);
+  ok('Berlin opens on the map, the day in a sheet, four tabs and a note button', (await p.locator('.tabbar [data-tab]').count()) === 4 && (await p.locator('[data-quick-note]').count()) === 1 && (await dots()) >= 25, `${await dots()} dots`);
   await shot('02-berlin');
 
   await p.waitForSelector('[data-offline="saved"]', { timeout: 180000 });
@@ -196,6 +196,26 @@ try {
   await p.locator('.stepper').first().getByLabel('Less').click();
   ok('pace can be changed', (await p.locator('.stepper strong').first().textContent()) === '3');
   await p.locator('.stepper').first().getByLabel('More').click();
+
+  // Quick notes: from a stop's card, and a photo from the note button; both still there after a reload.
+  await p.goto(TRIP); await p.waitForSelector('.trip-phone .sheet');
+  await openDay('Mon 23 Nov'); await p.click('[data-tab="today"]');
+  await p.locator('.stops .stop-main', { hasText: 'Gropius Bau' }).click();
+  await p.click('[data-card-note]');
+  await p.fill('[data-note-text]', 'Stötzer room upstairs, the light through the atrium');
+  await p.click('[data-note-save]');
+  await p.click('[data-card] .icon[aria-label="Close"]');
+  await p.click('[data-quick-note]');
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg==', 'base64');
+  await p.setInputFiles('.note-photo input', { name: 'shot.png', mimeType: 'image/png', buffer: png });
+  await p.waitForFunction(() => !document.querySelector('.overlay'), null, { timeout: 5000 }).catch(() => {});
+  await p.reload(); await p.waitForSelector('.trip-phone .sheet');
+  await p.click('[data-tab="notes"]');
+  await p.waitForSelector('[data-note]', { timeout: 5000 }).catch(() => {});
+  const noteText = (await p.textContent('[data-notes]')) || '';
+  ok('a note on a stop is kept with its time and place after a reload', /Stötzer room upstairs/.test(noteText) && /Gropius Bau/.test(noteText) && /\d\d:\d\d/.test(noteText), noteText.slice(0, 120));
+  ok('a photo note is kept on the device', (await p.locator('.note-photo-img').count()) === 1);
+  await shot('11-notes');
 
   // On the Mac: three columns, and a place dragged from the list onto a day.
   await p.setViewportSize({ width: 1440, height: 900 });

@@ -5,6 +5,8 @@ import { MapView, type MapStop } from '../parts/MapView';
 import { OfflineStatus } from '../parts/OfflineStatus';
 import { DayView, setAreaColors } from '../parts/DayView';
 import { StopCard } from '../parts/StopCard';
+import { QuickNote } from '../parts/QuickNote';
+import { NotesList } from '../parts/NotesList';
 import { PickList } from '../parts/PickList';
 import { TripInfo } from '../parts/TripInfo';
 import { Sheet, sheetHeight, type Snap } from '../parts/Sheet';
@@ -33,6 +35,7 @@ export function TripScreen({ id }: { id: string }) {
   const [tab, setTab] = useState<Tab>('today'), [mid, setMid] = useState<Mid>('day');
   const [sel, setSel] = useState<{ placeId: string; stopId?: string }>();
   const [snap, setSnap] = useState<Snap>('half');
+  const [noting, setNoting] = useState(false);
 
   useEffect(() => { if (t.trip && !t.trip.deleted) ensureDays(t.trip); }, [t.trip?.id, t.trip?.start, t.trip?.end]);
   // The day shown first: today if the trip is on, else its first day, or its last once it is over.
@@ -64,7 +67,13 @@ export function TripScreen({ id }: { id: string }) {
   };
   const selPlace = sel ? t.byId.get(sel.placeId) : undefined;
   const selStop = sel?.stopId ? t.stops.find((s) => s.id === sel.stopId) : undefined;
-  const card = selPlace && <StopCard t={t} place={selPlace} stop={selStop} day={day} onClose={() => setSel(undefined)} onAdded={(p) => select(p.id)} />;
+  const card = selPlace && <StopCard t={t} place={selPlace} stop={selStop} day={day} onClose={() => setSel(undefined)} onAdded={(p) => select(p.id)} onNote={() => setNoting(true)} />;
+  // What a quick note is about: the place open on screen, else today's next stop still to do.
+  const current = selPlace ? { placeId: selPlace.id, stopId: selStop?.id, about: selPlace.name }
+    : (() => { const today = t.days.find((d) => d.date === todayIn(trip.tz)); const next = today && dayStops(t.stops, t.byId, today.id).find((x) => x.stop.state === 'planned');
+        return next?.place ? { placeId: next.place.id, stopId: next.stop.id, about: next.place.name } : {}; })();
+  const composer = noting && <QuickNote tripId={trip.id} {...current} onClose={() => setNoting(false)} />;
+  const notesList = <NotesList t={t} onPlace={(pid) => select(pid)} onNew={() => setNoting(true)} />;
   const changeDay = (id: string) => { setDayId(id); setSel(undefined); if (wide) setMid('day'); else setTab('today'); };
 
   const map = (pad: { top: number; bottom: number; left: number; right: number }) => (
@@ -85,16 +94,19 @@ export function TripScreen({ id }: { id: string }) {
             tab === 'today' ? (day ? <DayView t={t} day={day} selected={sel?.placeId} onSelect={select} onDay={changeDay} wide={false} /> : null)
             : tab === 'places' ? <PickList t={t} day={day} selected={sel?.placeId} onSelect={(pid) => select(pid)} />
             : tab === 'trip' ? <TripInfo t={t} onDay={changeDay} />
-            : <p className="muted pad">Quick notes, a photo or a voice memo stamped with the time and place, arrive in round 4.</p>
+            : notesList
           )}
         </Sheet>
         <nav className="tabbar">
-          {(['today', 'places', 'trip', 'notes'] as Tab[]).map((x) => (
+          {(['today', 'places', 'note', 'trip', 'notes'] as const).map((x) => x === 'note' ? (
+            <button key={x} className="tab-note" data-quick-note aria-label="Quick note" onClick={() => setNoting(true)}><span className="plus">+</span><span>Note</span></button>
+          ) : (
             <button key={x} className={tab === x && !card ? 'on' : ''} data-tab={x} onClick={() => { setTab(x); setSel(undefined); if (snap === 'peek') setSnap('half'); }}>
               <TabIcon tab={x} /><span>{x === 'today' ? (day && day.date === todayIn(trip.tz) ? 'Today' : 'Day') : x === 'places' ? 'Places' : x === 'trip' ? 'Trip' : 'Notes'}</span>
             </button>
           ))}
         </nav>
+        {composer}
       </div>
     );
   }
@@ -134,12 +146,13 @@ export function TripScreen({ id }: { id: string }) {
         {mid === 'pick' && (<><h2 className="mid-title">To pick from</h2><p className="muted small">Saved, not on a day. + adds to {day ? dayLabel(day.date) : 'the day'}; drag one onto a day on the left.</p><PickList t={t} day={day} selected={sel?.placeId} onSelect={(pid) => select(pid)} /></>)}
         {mid === 'anchors' && <TripInfo t={t} part="anchors" onDay={changeDay} />}
         {mid === 'arrival' && <TripInfo t={t} part="arrival" onDay={changeDay} />}
-        {mid === 'notes' && <p className="muted">Quick notes arrive in round 4.</p>}
+        {mid === 'notes' && (<><h2 className="mid-title">Notes</h2>{notesList}</>)}
       </section>
       <div className="mapcol">
         {map({ top: 40, bottom: 40, left: 40, right: card ? 380 : 40 })}
         {card && <div className="floatcard">{card}</div>}
       </div>
+      {composer}
     </div>
   );
 }

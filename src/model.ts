@@ -26,7 +26,9 @@ export type StopState = 'planned' | 'done' | 'later' | 'dropped';
 export type Stop = Row & { tripId: string; dayId: string; placeId: string; order: number; state: StopState; time?: string; note?: string };
 export type AnchorKind = 'flight' | 'train' | 'stay' | 'booking';
 export type Anchor = Row & { tripId: string; kind: AnchorKind; title: string; start: string; end?: string; placeId?: string; detail?: string };
-export type Note = Row & { tripId: string; at: number; text?: string; lat?: number; lng?: number; placeId?: string; stopId?: string };
+// A quick note. Its photo or voice memo lives on this device only (db.blobs), not synced yet: the note says what it holds.
+export type NoteMedia = { id: string; kind: 'photo' | 'voice'; mime: string; secs?: number };
+export type Note = Row & { tripId: string; at: number; text?: string; lat?: number; lng?: number; placeId?: string; stopId?: string; media?: NoteMedia };
 export type CityGuide = Row & { tripId: string; city: string; sections: { title: string; lines: string[] }[] };
 
 export const TABLES = ['trips', 'areas', 'places', 'days', 'stops', 'anchors', 'notes', 'guides'] as const;

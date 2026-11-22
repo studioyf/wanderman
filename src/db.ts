@@ -7,6 +7,7 @@ export const db = new Dexie('wanderman') as Dexie & {
   days: EntityTable<Day, 'id'>; stops: EntityTable<Stop, 'id'>; anchors: EntityTable<Anchor, 'id'>;
   notes: EntityTable<Note, 'id'>; guides: EntityTable<CityGuide, 'id'>;
   meta: EntityTable<{ key: string; value: any }, 'key'>;
+  blobs: EntityTable<{ id: string; blob: Blob }, 'id'>;
 };
 db.version(1).stores({
   trips: 'id, dirty, updatedAt',
@@ -19,6 +20,8 @@ db.version(1).stores({
   guides: 'id, tripId, dirty',
   meta: 'key',
 });
+// Version 2: photos and voice memos of quick notes, kept on the device (not synced).
+db.version(2).stores({ blobs: 'id' });
 
 let onChange: (() => void) | undefined;
 export const whenChanged = (f: () => void) => { onChange = f; };
