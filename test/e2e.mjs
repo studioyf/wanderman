@@ -75,6 +75,8 @@ try {
   const monday = await stopNames();
   ok('Monday reads in order with the way between stops', monday.length === 7 && monday[0] === 'Berlin Wall Memorial' && (await p.locator('.stops .leg').count()) === 6, monday.join(', '));
   ok('Monday says it is too full', await p.locator('[data-warn]').isVisible());
+  const light = (await p.textContent('[data-light]')) || '';
+  ok('Monday shows its light: blue hour, sunrise, golden hour, sunset', /06:4\d/.test(light) && /07:4\d/.test(light) && /Sunset16:0\d/.test(light), light);
   ok('Gazzo is flagged far off the walk', /Gazzo/.test(await p.locator('.stop-row', { has: p.locator('.leg.far') }).first().textContent()));
   await p.click('[data-tab="today"]'); // back to the sheet's day view: Today shows the last day opened
   await shot('03-monday');

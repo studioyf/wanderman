@@ -221,3 +221,11 @@ a.secondary, .card-link { color: var(--ink); }
 .okc { color: var(--ok); font-weight: 650; }
 .info h4 { margin: 1.1rem 0 .3rem; }
 .info-title { font-family: var(--name-font); font-weight: var(--name-weight); font-size: 1.4rem; margin: 0; }
+
+/* ---- The day's light ---- */
+.light { display: grid; grid-template-columns: repeat(6, 1fr); gap: .3rem; margin: .1rem 0 .6rem; font-size: .88rem; font-variant-numeric: tabular-nums; }
+.light span { display: grid; gap: .05rem; white-space: nowrap; }
+.light small { font-size: .66rem; color: var(--muted); letter-spacing: .02em; }
+.light .blue { color: #3f5f9e; }
+.light .gold { color: #a8700f; }
+[data-look='signal'] .light .blue { color: #1f4fb4; }

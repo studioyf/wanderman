@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Day, Place, Stop } from '../model';
+import { lightOn } from '../light';
 import { dayStops, detours, legLabel, load, fmtH, tidy, tidyChanges, pickable, type Tidy } from '../plan';
 import { reorder, markDone, laterToday, moveToDay, nextTime, applyTidy } from '../actions';
 import { usePace } from '../pace';
@@ -37,6 +38,7 @@ export function DayView({ t, day, selected, onSelect, onDay, wide }: Props) {
         {!wide && <button className="icon" aria-label="Next day" disabled={idx >= t.days.length - 1} onClick={() => onDay(t.days[idx + 1].id)}>›</button>}
         {items.some((x) => x.stop.state === 'planned') && <button className="secondary small" data-tidy onClick={openTidy}>Tidy</button>}
       </div>
+      <LightStrip t={t} date={day.date} />
       {l.over && <button className="warn" data-warn onClick={openTidy}>Full day: {l.reasons.join(', ')}. <b>Tidy?</b></button>}
       {!items.length && <p className="muted">Add places from Places, or long-press the map.</p>}
       <ol className="stops">
@@ -162,5 +164,20 @@ function TidyPanel({ t, p, dayId, onClose }: { t: TripData; p: Tidy; dayId: stri
         </>
       )}
     </Overlay>
+  );
+}
+
+// The day's light, one line: blue hour, sunrise, golden hour, sunset, blue hour, in the city's own time.
+function LightStrip({ t, date }: { t: TripData; date: string }) {
+  const base = t.trip?.baseId ? t.byId.get(t.trip.baseId) : undefined;
+  const at = base?.lat != null ? base : t.places.find((p) => p.lat != null);
+  if (!at || !t.trip) return null;
+  const x = lightOn(date, at.lat!, at.lng!, t.trip.tz);
+  return (
+    <div className="light" data-light aria-label="The day's light">
+      {([['Blue', x.blueAm[0], 'blue'], ['Sunrise', x.sunrise, ''], ['Gold till', x.goldenAm, 'gold'], ['Gold from', x.goldenPm, 'gold'], ['Sunset', x.sunset, ''], ['Blue', x.bluePm[0], 'blue']] as const).map(([k, v, c], i) => (
+        <span key={i} className={c}><small>{k}</small>{v}</span>
+      ))}
+    </div>
   );
 }
