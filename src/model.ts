@@ -25,7 +25,9 @@ export type Day = Row & { tripId: string; date: string; title: string; note?: st
 export type StopState = 'planned' | 'done' | 'later' | 'dropped';
 export type Stop = Row & { tripId: string; dayId: string; placeId: string; order: number; state: StopState; time?: string; note?: string };
 export type AnchorKind = 'flight' | 'train' | 'stay' | 'booking';
-export type Anchor = Row & { tripId: string; kind: AnchorKind; title: string; start: string; end?: string; placeId?: string; detail?: string };
+// The only timed things. start and end are the city's own wall-clock time, 'YYYY-MM-DDTHH:MM'. The ticket file
+// (PDF or picture) is kept on the device (db.blobs), like note media: not synced yet.
+export type Anchor = Row & { tripId: string; kind: AnchorKind; title: string; start: string; end?: string; placeId?: string; detail?: string; ticket?: { id: string; name: string; mime: string } };
 // A quick note. Its photo or voice memo lives on this device only (db.blobs), not synced yet: the note says what it holds.
 export type NoteMedia = { id: string; kind: 'photo' | 'voice'; mime: string; secs?: number };
 export type Note = Row & { tripId: string; at: number; text?: string; lat?: number; lng?: number; placeId?: string; stopId?: string; media?: NoteMedia };

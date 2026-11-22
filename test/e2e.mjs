@@ -217,6 +217,25 @@ try {
   ok('a photo note is kept on the device', (await p.locator('.note-photo-img').count()) === 1);
   await shot('11-notes');
 
+  // Fixed times: Tuesday shows the check-out and the flight home; a ticket PDF attaches and opens.
+  await openDay('Tue 24 Nov'); await p.click('[data-tab="today"]');
+  const anchorsText = (await p.textContent('[data-day-anchors]').catch(() => '')) || '';
+  ok('Tuesday shows its fixed times in order', /11:00.*Check out.*12:00.*Flight home/s.test(anchorsText), anchorsText);
+  await p.locator('[data-day-anchors] .anchor-row', { hasText: 'Flight home' }).click();
+  const pdf = Buffer.from('%PDF-1.1\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj 3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 100]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF');
+  await p.setInputFiles('[data-ticket-file]', { name: 'boarding-pass.pdf', mimeType: 'application/pdf', buffer: pdf });
+  await p.waitForSelector('[data-ticket-open]', { timeout: 5000 }).catch(() => {});
+  const [popup] = await Promise.all([p.waitForEvent('popup', { timeout: 8000 }).catch(() => null), p.click('[data-ticket-open]').catch(() => {})]);
+  const href = await p.getAttribute('[data-ticket-open]', 'href').catch(() => '');
+  const head = href ? await p.evaluate(async (u) => (await (await fetch(u)).text()).slice(0, 8), href) : '';
+  ok('a ticket PDF attaches to the flight and opens', !!popup && head.startsWith('%PDF'), `${popup ? 'opened' : 'no window'} · ${head}`);
+  if (popup) await popup.close();
+  await shot('12-anchor');
+  await p.locator('.overlay-box .ghost', { hasText: 'Cancel' }).click();
+  await p.reload(); await p.waitForSelector('.trip-phone .sheet');
+  await openDay('Tue 24 Nov'); await p.click('[data-tab="today"]');
+  ok('the ticket is still there after a reload', (await p.locator('[data-day-anchors] .anchor-row', { hasText: 'Flight home' }).locator('.anchor-ticket').count()) === 1);
+
   // On the Mac: three columns, and a place dragged from the list onto a day.
   await p.setViewportSize({ width: 1440, height: 900 });
   await p.goto(TRIP); await p.waitForSelector('.trip-wide'); await mapDrawn().catch(() => {});

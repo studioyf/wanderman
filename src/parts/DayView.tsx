@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Day, Place, Stop } from '../model';
 import { lightOn } from '../light';
+import { DayAnchors } from './Anchors';
 import { dayStops, detours, legLabel, load, fmtH, tidy, tidyChanges, pickable, type Tidy } from '../plan';
 import { reorder, markDone, laterToday, moveToDay, nextTime, applyTidy } from '../actions';
 import { usePace } from '../pace';
@@ -39,6 +40,7 @@ export function DayView({ t, day, selected, onSelect, onDay, wide }: Props) {
         {items.some((x) => x.stop.state === 'planned') && <button className="secondary small" data-tidy onClick={openTidy}>Tidy</button>}
       </div>
       <LightStrip t={t} date={day.date} />
+      <DayAnchors t={t} date={day.date} />
       {l.over && <button className="warn" data-warn onClick={openTidy}>Full day: {l.reasons.join(', ')}. <b>Tidy?</b></button>}
       {!items.length && <p className="muted">Add places from Places, or long-press the map.</p>}
       <ol className="stops">

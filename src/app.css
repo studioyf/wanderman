@@ -249,3 +249,19 @@ a.secondary, .card-link { color: var(--ink); }
 .note-body { margin: 0; white-space: pre-wrap; }
 .note-photo-img { width: 100%; max-height: 320px; object-fit: cover; border-radius: 10px; }
 .note audio { width: 100%; }
+
+/* ---- Fixed times: flights, trains, stays ---- */
+.day-anchors { display: grid; gap: .3rem; margin: 0 0 .6rem; }
+.anchor-list { display: grid; gap: .35rem; }
+.anchor-row { display: grid; grid-template-columns: auto auto 1fr auto; gap: .55rem; align-items: center; text-align: left; width: 100%; padding: .55rem .7rem; border: 1.5px solid var(--ink); border-radius: 10px; background: var(--raised); color: var(--ink); font: inherit; cursor: pointer; }
+.anchor-time { font-weight: 700; font-variant-numeric: tabular-nums; }
+.anchor-icon { font-size: 1rem; }
+.anchor-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anchor-ticket { font-size: .72rem; font-weight: 700; padding: .15rem .45rem; border-radius: 999px; background: var(--ink); color: var(--raised); }
+.anchor-sheet { display: grid; gap: .4rem; }
+.anchor-sheet p { margin: 0; }
+.ticket-pick { display: grid; place-items: center; min-height: 46px; cursor: pointer; text-align: center; }
+.anchor-form { display: grid; gap: .45rem; }
+.anchor-form input, .anchor-form select, .anchor-form textarea { font: inherit; padding: .6rem; border: 1.5px solid var(--line); border-radius: 10px; background: var(--ground); color: var(--ink); width: 100%; }
+.anchor-form .row { display: grid; grid-template-columns: 1fr 7.5rem; gap: .45rem; }
+.ticket-open { display: grid; place-items: center; min-height: 48px; text-decoration: none; border-radius: 10px; }

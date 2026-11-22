@@ -1,6 +1,7 @@
 import { remove } from '../db';
 import { go } from '../App';
-import { dayLabel, timeOf, datesLabel } from './format';
+import { dayLabel, datesLabel } from './format';
+import { AnchorList } from './Anchors';
 import { dayStops } from '../plan';
 import type { TripData } from './useTrip';
 
@@ -17,11 +18,9 @@ export function TripInfo({ t, part, onDay }: { t: TripData; part?: 'anchors' | '
         {t.days.map((d) => { const n = dayStops(t.stops, t.byId, d.id); const done = n.filter((x) => x.stop.state === 'done').length; return (
           <button key={d.id} className="menu-item" onClick={() => onDay(d.id)}>{dayLabel(d.date)} <span className="muted small">{d.title}{n.length ? ` · ${n.length} stops${done ? `, ${done} done` : ''}` : ''}</span></button>); })}
       </>)}
-      {show('anchors') && t.anchors.length > 0 && (<>
+      {show('anchors') && (<>
         <h4>Fixed times</h4>
-        {[...t.anchors].sort((a, b) => a.start.localeCompare(b.start)).map((a) => (
-          <div key={a.id} className="anchor"><span className="time">{dayLabel(a.start.slice(0, 10))} {timeOf(a.start)}</span><span>{a.title}{a.detail && <span className="muted small"> · {a.detail}</span>}</span></div>
-        ))}
+        <AnchorList t={t} />
       </>)}
       {show('arrival') && (<>
         <h4>Arrival guide</h4>
